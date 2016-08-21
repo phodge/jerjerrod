@@ -88,7 +88,7 @@ class GitInspector(Inspector):
         wip = set()
         cmd = ['git', 'branch', '--verbose', '--all']
         regex = re.compile(
-            r'^(\* (?:\(HEAD detached.*?\)|\(no branch, rebasing.*?\)|\w+)|  \S+)\s+(\w+|->)')  # noqa
+            r'^(\* (?:\((?:HEAD detached|detached from|no branch, rebasing).*?\)|\w+)|  \S+)\s+(\w+|->)')  # noqa
         for line in cmd2lines(cmd, cwd=self._path):
             match = regex.match(line)
             if match is None:
