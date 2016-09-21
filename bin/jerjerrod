@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+from __future__ import (
+    absolute_import, division, unicode_literals, print_function)
+import sys
+import click
+
+@click.group()
+def cli():
+    pass
+
+
+# TODO: which commands need to be fast?
+# WS name PATH
+# WS names
+# WS status NAME
+# WS changed NAME
+# WS untracked NAME
+# WS stashes NAME
+# WS outgoing NAME
+
+# TODO: make the following invocations work:
+# WS summary
+# WS names
+# WS name PATH
+# WS status NAME
+# WS changed NAME
+# WS untracked NAME
+# WS stashes NAME
+# WS outgoing NAME
+
+
+@cli.command()
+@click.argument('STATUS')
+def namesbystatus(status):
+    """
+    Names returned will be one of the following:
+    - names of workspaces that match the given STATUS
+    - names of other repos that match the given STATUS
+    """
+    # use the disk cache
+    from jerjerrod.caching import DiskCache
+    from jerjerrod.projects import get_all_projects
+    for proj in get_all_projects(DiskCache()):
+        if proj.getstatus(True) == status:
+            print(proj.getname())
+
+
+@cli.command()
+@click.argument('NAME')
+def summary(name):
+    # use the disk cache
+    from jerjerrod.caching import DiskCache
+    cache = DiskCache()
+
+    from jerjerrod.projects import get_all_projects
+
+    def _summarise(repo, indent):
+        info = repo._getinfo(True)
+        sys.stdout.write(' ' * indent)
+        sys.stdout.write('  Outgoing: %s\n' % info['outgoing'])
+        sys.stdout.write(' ' * indent)
+        sys.stdout.write('  Changed/Untracked: %d/%d\n'
+                         % (len(info['changed']), len(info['untracked'])))
+        if info['stashes']:
+            sys.stdout.write(' ' * indent)
+            sys.stdout.write('  Stashes: %d\n' % info['stashes'])
+
+    for proj in get_all_projects(DiskCache()):
+        if proj.getname() != name:
+            continue
+        sys.stdout.write("%s %s\n" % (name, proj._path))
+        if hasattr(proj, '_repos'):
+            # TODO: summarise workspace
+            indent = 8
+            for repo in proj._repos:
+                sys.stdout.write(' ' * indent)
+                sys.stdout.write("%s %s\n" % (repo._name, repo._path))
+                _summarise(repo, indent)
+            garbage = proj.getgarbage()
+            if len(garbage):
+                sys.stdout.write(' ' * indent)
+                sys.stdout.write("GARBAGE: %s\n" % (garbage, ))
+        else:
+            # TODO: summarise single
+            sys.stdout.write(name)
+            _summarise(proj, 0)
+
+
+if __name__ == '__main__':
+    cli()
