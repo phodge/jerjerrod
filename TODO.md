@@ -1,0 +1,32 @@
+- nice pretty overview for new login shells / new tmux sessions
+- some way to get summary info for tmux statusline
+  - current workspace is either A) aggregate or B) singular
+  - detail summary of current workspace
+    - # changed [red]
+    - # untracked [orange]
+    - # stashes [red]
+    - # outgoing [yellow]
+    - # garbage [yellow]
+    - numbers are totals if aggregate, or just the current repo if singular
+  - simple summary of other workspaces
+    - always show totals, regardless of whether aggregate or singular
+    - if unchanged or stashes, bg=red
+    - if untracked, bg=orange
+    - if outgoing or garbage, bg=yellow
+    - if still linked to an open trelo card, jira issue, github issue, color=cyan
+    - show # of OK projects/workspaces
+- put something in PS1 or RPROMPT maybe
+  - summary of current project (or workspace if aggregate)
+    - # changed [red]
+    - # untracked [orange]
+    - # stashes [red]
+    - # outgoing [yellow]
+    - # garbage [yellow]
+- is the current dir a virtualenv that you need to source?
+- is there something that we like to have running in the background while we're working in this dir?
+- ability to link a workspace and/or project to a ...
+  - trello card
+  - jira ticket
+  - github project issue
+- use https://pypi.python.org/pypi/python-daemon/ to spin up a service daemon in the
+  background which can respond to requests more quickly
