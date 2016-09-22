@@ -1,6 +1,6 @@
 from __future__ import (
     absolute_import, division, unicode_literals, print_function)
-from subprocess import check_output, STDOUT, CalledProcessError
+from subprocess import check_output, STDOUT, CalledProcessError, TimeoutExpired
 import re
 import os
 from os.path import join
@@ -86,9 +86,10 @@ class GitInspector(Inspector):
         found = set()
         wip = set()
         cmd = ['git', 'branch', '--verbose', '--all']
+        regex = re.compile(
+            r'^(\* (?:\(HEAD detached.*?\)|\w+)|  \S+)\s+(\w+|->)')
         for line in cmd2lines(cmd, cwd=self._path):
-            match = re.match(r'^(\* (?:\(HEAD detached.*?\)|\w+)|  \S+)\s+(\w+|->)',
-                             line)
+            match = regex.match(line)
             if match is None:
                 raise Exception("Did not understand %r" % line)
             #lead = match.group(1)[:2]
@@ -170,7 +171,10 @@ class HgInspector(Inspector):
         """
         try:
             cmd = ['hg', 'outgoing']
-            check_output(cmd, stderr=STDOUT, cwd=self._path, timeout=HG_REMOTE_TIMEOUT)
+            check_output(cmd, stderr=STDOUT, cwd=self._path,
+                         timeout=HG_REMOTE_TIMEOUT)
+        except TimeoutExpired:
+            return '?'
         except CalledProcessError as err:
             if err.output.endswith(
                     b'abort: error: nodename nor servname provided'
