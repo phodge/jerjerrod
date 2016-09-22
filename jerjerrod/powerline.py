@@ -59,6 +59,12 @@ def wsnames(pl, category):
         if status == category:
             names.append(proj.getname())
 
+    # never show more than 5 names in the 'unknown' category
+    count = len(names)
+    if category == 'JERJERROD:UNKNOWN' and count > 5:
+        names = names[:5]
+        names.append('(+{} more)'.format(count - 5))
+
     ret = []
     if len(names):
         ret.append({
