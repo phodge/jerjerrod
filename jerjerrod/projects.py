@@ -5,7 +5,7 @@ import re
 import os
 from os.path import join
 
-from jerjerrod.caching import PROJECT_EXPIRY
+from jerjerrod.caching import PROJECT_EXPIRY, OUTGOING_EXPIRY
 from jerjerrod.config import get_workspaces, get_singles
 
 
@@ -25,6 +25,8 @@ def cmd2lines(*args, **kwargs):
 class Inspector(object):
     _proc = None
     _callback = None
+
+    outgoingexpensive = True
 
     def __init__(self, path):
         self._path = path
@@ -49,6 +51,7 @@ class Inspector(object):
 
 class GitInspector(Inspector):
     _statuslines = None
+    outgoingexpensive = False
 
     def getbranch(self):
         lines = list(cmd2lines(['git', 'branch'], cwd=self._path))
@@ -98,9 +101,9 @@ class GitInspector(Inspector):
                 continue
             assert revhash != '->'
             known.add(revhash)
-            # if the branch starts with remotes/origin, we want to mark the rev
+            # if the branch starts with remotes/, we want to mark the rev
             # as found
-            if branch.startswith('remotes/origin/'):
+            if branch.startswith('remotes/'):
                 if branch.endswith('.WIP'):
                     wip.add(revhash)
                 elif '.WIP' not in branch:
@@ -227,9 +230,17 @@ class Repo(Project):
         info['branch'] = self._insp.getbranch()
         info['changed'] = list(self._insp.getchanged())
         info['untracked'] = list(self._insp.getuntracked())
-        outgoing = self._insp.getoutgoing()
-        if outgoing == '?' and old is not None:
-            outgoing = old['outgoing']
+
+        # NOTE: do we need to use a separate cache for outgoing status?
+        outgoing = self._cache.getcache(self._path + '...outgoing',
+                                        OUTGOING_EXPIRY)
+        if outgoing is None or not self._insp.outgoingexpensive:
+            outgoing = self._insp.getoutgoing()
+            if outgoing == '?' and old is not None:
+                outgoing = old['outgoing']
+            else:
+                self._cache.setcache(self._path + '...outgoing', outgoing)
+
         info['outgoing'] = outgoing
         info['stashes'] = self._insp.getstashcount()
         self._cache.setcache(self._path, info)

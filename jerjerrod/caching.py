@@ -8,7 +8,10 @@ from os.path import join
 
 HOME = os.environ['HOME']
 CACHEDIR = join(HOME, '.config', 'jerjerrod', 'cache')
-PROJECT_EXPIRY = 3600
+# re-check projects on the hour
+PROJECT_EXPIRY = 60 * 60
+# only check outgoing every 4 hours
+OUTGOING_EXPIRY = 60 * 60 * 4
 
 
 def _getcachepath(path):
@@ -37,3 +40,8 @@ class DiskCache(object):
         sanepath = join(CACHEDIR, _getcachepath(path))
         with open(sanepath, 'w') as f:
             f.write(data)
+
+    def clearcache(self, path):
+        sanepath = join(CACHEDIR, _getcachepath(path))
+        if os.path.exists(sanepath):
+            os.unlink(sanepath)

@@ -86,5 +86,29 @@ def summary(name):
             _summarise(proj, 0)
 
 
+@cli.command()
+@click.argument('PATH')
+@click.option('--local',
+              is_flag=True,
+              help="Don't touch the expensive 'hg outgoing' cache")
+def clearcache(path, local):
+    from jerjerrod.caching import DiskCache
+    from os.path import realpath, dirname, join, exists
+    """clear all caches associated with PATH"""
+    cache = DiskCache()
+
+    def _checkandclear(path):
+        if exists(join(path, '.git')) or exists(join(path, '.hg')):
+            cache.clearcache(path)
+            if not local:
+                cache.clearcache(path + '...outgoing')
+
+    trypath = realpath(path)
+    while len(trypath) > 2:
+        _checkandclear(trypath)
+        # shorten the path and try again
+        trypath = dirname(trypath)
+
+
 if __name__ == '__main__':
     cli()

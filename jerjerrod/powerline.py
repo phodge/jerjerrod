@@ -15,12 +15,10 @@ _SUBEXPIRE = 60 * 60
 
 def _refresh(force):
     global _SUB, _SUBTIME
-    if _SUB is not None:
+    if _SUB:
         # TODO: garbage-collect the thing if it's finished
         retval = _SUB.poll()
         if retval is not None:
-            import pprint
-            print('retval = ' + pprint.pformat(retval))  # noqa TODO
             _SUB = None if retval == 0 else False
             _SUBTIME = time.time()
         return
