@@ -10,8 +10,8 @@ from jerjerrod.config import get_workspaces, get_singles
 
 
 HOME = os.environ['HOME']
-# allow up to 5 seconds to contact a remote HG server
-HG_REMOTE_TIMEOUT = 5
+# allow up to 10 seconds to contact a remote HG server
+HG_REMOTE_TIMEOUT = 10
 
 
 def cmd2lines(*args, **kwargs):
@@ -145,7 +145,7 @@ class HgInspector(Inspector):
             untracked = []
             lines = cmd2lines(['hg', 'status'], cwd=self._path)
             for line in lines:
-                if line[:2] in ('M ', 'A ', 'D '):
+                if line[:2] in ('M ', 'A ', 'D ', 'R '):
                     changed.append(line[2:])
                 elif line[:2] == '? ':
                     untracked.append(line[2:])
