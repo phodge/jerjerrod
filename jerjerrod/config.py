@@ -26,6 +26,8 @@ def _populateconfig(cache):
 
 
 def _readcfgline(number, line, cache):
+    if line.startswith('#'):
+        return
     keyword, path, *flags = line.split(' ')
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
@@ -40,6 +42,12 @@ def _readcfgline(number, line, cache):
     if keyword == 'PROJECT':
         for match in glob.glob(path):
             cache['SINGLES'].append((os.path.basename(match), match, flags))
+        return
+    if keyword == 'FORGET':
+        for thing in list(cache['SINGLES']):
+            if thing[1] == path:
+                cache['SINGLES'].remove(thing)
+                break
         return
     raise Exception("Invalid CFG line %d: %s" % (number, line))
 
