@@ -1,8 +1,10 @@
 from __future__ import (
     absolute_import, division, unicode_literals, print_function)
+import os
 import time
 import subprocess
 
+from jerjerrod.config import RCFILE
 from jerjerrod.caching import DiskCache
 from jerjerrod.projects import get_all_projects
 
@@ -11,6 +13,10 @@ from jerjerrod.projects import get_all_projects
 _SUB = None
 _SUBTIME = None
 _SUBEXPIRE = 60 * 60
+
+# we want a cache for the config stuff
+_CFGCACHE = {}
+_CFGTIME = None
 
 
 def _refresh(force):
@@ -32,7 +38,8 @@ def _refresh(force):
             and not force):
         return
 
-    _SUB = subprocess.Popen(['jerjerrod', 'namesbystatus', 'JERJERROD:CHANGED'])
+    cmd = ['jerjerrod', 'namesbystatus', 'JERJERROD:CHANGED']
+    _SUB = subprocess.Popen(cmd)
 
 
 def wsscancount(pl):
@@ -48,11 +55,35 @@ def wsscancount(pl):
     return ret
 
 
+_CFGCHECKTIME = None
+# check the config file's mtime at most once very 3 seconds
+_CFGCHECKFREQ = 3
+
+
+def _expirecfgcache():
+    global _CFGCHECKTIME, _CFGCACHE, _CFGTIME
+
+    if (_CFGCHECKTIME is not None
+            and (time.time() - _CFGCHECKTIME) < _CFGCHECKFREQ):
+        return
+
+    # we're going to stat the RCFILE to see if it has changed
+    _CFGCHECKTIME = time.time()
+    mtime = os.stat(RCFILE).st_mtime
+
+    # if the file's mtime is different to last time, we want to destroy our
+    # cache
+    if mtime != _CFGTIME:
+        _CFGTIME = mtime
+        _CFGCACHE = {}
+
+
 def wsnames(pl, category):
+    _expirecfgcache()
     assert category in ('JERJERROD:CHANGED', 'JERJERROD:UNTRACKED',
                         'JERJERROD:UNPUSHED', 'JERJERROD:UNKNOWN')
     names = []
-    for proj in get_all_projects(DiskCache()):
+    for proj in get_all_projects(DiskCache(), _CFGCACHE):
         status = proj.getstatus(False)
         if status == 'JERJERROD:UNKNOWN' and _SUB is None:
             _refresh(True)
