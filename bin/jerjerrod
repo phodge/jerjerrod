@@ -40,7 +40,7 @@ def namesbystatus(status):
     # use the disk cache
     from jerjerrod.caching import DiskCache
     from jerjerrod.projects import get_all_projects
-    for proj in get_all_projects(DiskCache()):
+    for proj in get_all_projects(DiskCache(), {}):
         if proj.getstatus(True) == status:
             print(proj.getname())
 
@@ -65,7 +65,7 @@ def summary(name):
             sys.stdout.write(' ' * indent)
             sys.stdout.write('  Stashes: %d\n' % info['stashes'])
 
-    for proj in get_all_projects(DiskCache()):
+    for proj in get_all_projects(DiskCache(), {}):
         if proj.getname() != name:
             continue
         sys.stdout.write("%s %s\n" % (name, proj._path))

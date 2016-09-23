@@ -312,17 +312,17 @@ class Workspace(Project):
         return self._garbage
 
 
-def get_all_projects(cache):
-    for name, path, flags in get_workspaces():
+def get_all_projects(diskcache, memcache):
+    for name, path, flags in get_workspaces(memcache):
         ignore = []
         for flag in flags:
             if flag.startswith('IGNORE='):
                 ignore.append(flag[7:])
 
         project = Workspace(name, path, ignore=ignore)
-        project.setcache(cache)
+        project.setcache(diskcache)
         yield project
-    for name, path, flags in get_singles():
+    for name, path, flags in get_singles(memcache):
         assert not len(flags)
         # what type of inspector?
         if os.path.isdir(join(path, '.git')):
@@ -332,5 +332,5 @@ def get_all_projects(cache):
         else:
             raise Exception("Bad project path %s" % path)  # noqa
         project = Repo(name, path, inspector)
-        project.setcache(cache)
+        project.setcache(diskcache)
         yield project
