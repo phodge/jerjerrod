@@ -2,21 +2,16 @@ import os.path
 import glob
 from os.path import join
 
-_WORKSPACES = None
-_SINGLES = None
-
-
 HOME = os.environ['HOME']
 RCFILE = join(HOME, '.config', 'jerjerrod', 'jerjerrod.conf')
 
 
-def _readcfg():
-    global _WORKSPACES, _SINGLES
-    if _WORKSPACES is not None:
+def _populateconfig(cache):
+    if 'WORKSPACES' in cache:
         return
 
-    _WORKSPACES = []
-    _SINGLES = []
+    cache['WORKSPACES'] = []
+    cache['SINGLES'] = []
 
     if not os.path.exists(RCFILE):
         return
@@ -27,11 +22,10 @@ def _readcfg():
             number += 1
             stripped = line.strip()
             if len(stripped):
-                _readcfgline(number, stripped)
+                _readcfgline(number, stripped, cache)
 
 
-def _readcfgline(number, line):
-    global _WORKSPACES, _SINGLES
+def _readcfgline(number, line, cache):
     keyword, path, *flags = line.split(' ')
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
@@ -41,20 +35,20 @@ def _readcfgline(number, line):
         raise Exception("Invalid CFG flag on line %d: %r" % (number, flag))
     if keyword == 'WORKSPACE':
         for match in glob.glob(path):
-            _WORKSPACES.append((os.path.basename(match), match, flags))
+            cache['WORKSPACES'].append((os.path.basename(match), match, flags))
         return
     if keyword == 'PROJECT':
         for match in glob.glob(path):
-            _SINGLES.append((os.path.basename(match), match, flags))
+            cache['SINGLES'].append((os.path.basename(match), match, flags))
         return
     raise Exception("Invalid CFG line %d: %s" % (number, line))
 
 
-def get_workspaces():
-    _readcfg()
-    return _WORKSPACES
+def get_workspaces(cache):
+    _populateconfig(cache)
+    return cache['WORKSPACES']
 
 
-def get_singles():
-    _readcfg()
-    return _SINGLES
+def get_singles(cache):
+    _populateconfig(cache)
+    return cache['SINGLES']
