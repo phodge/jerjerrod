@@ -140,12 +140,13 @@ class HgInspector(Inspector):
         return output
 
     def statuslines(self):
+        changedregex = re.compile(r'^[MADR!] ')
         if self._statuslines is None:
             changed = []
             untracked = []
             lines = cmd2lines(['hg', 'status'], cwd=self._path)
             for line in lines:
-                if line[:2] in ('M ', 'A ', 'D ', 'R '):
+                if changedregex.match(line):
                     changed.append(line[2:])
                 elif line[:2] == '? ':
                     untracked.append(line[2:])
