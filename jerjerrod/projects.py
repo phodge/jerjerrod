@@ -181,8 +181,12 @@ class HgInspector(Inspector):
                     b'abort: error: nodename nor servname provided'
                     b', or not known\n'):
                 return '-'
+            if err.output.endswith(
+                    b'abort: no suitable response from remote hg!\n'):
+                return '-'
             if err.output.endswith(b'no changes found\n'):
                 return 0
+            print(err.output)
             raise
 
         return '1+'
