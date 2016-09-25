@@ -61,12 +61,13 @@ class GitInspector(Inspector):
         return '__NO_BRANCH__'
 
     def statuslines(self):
+        changedregex = re.compile(r'^(?!  )[MAD ][M ] ')
         if self._statuslines is None:
             changed = []
             untracked = []
             lines = cmd2lines(['git', 'status', '--short'], cwd=self._path)
             for line in lines:
-                if line[:3] in ('M  ', 'A  ', 'D  ', ' M ', 'MM '):
+                if changedregex.match(line[:3]):
                     changed.append(line[3:])
                 elif line[:3] in (' ? ', '?? '):
                     untracked.append(line[3:])
