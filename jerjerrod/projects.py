@@ -61,7 +61,7 @@ class GitInspector(Inspector):
         return '__NO_BRANCH__'
 
     def statuslines(self):
-        changedregex = re.compile(r'^(?!  )[MAD ][M ] ')
+        changedregex = re.compile(r'^(?!  )[MADU ][UM ] ')
         if self._statuslines is None:
             changed = []
             untracked = []
@@ -88,7 +88,7 @@ class GitInspector(Inspector):
         wip = set()
         cmd = ['git', 'branch', '--verbose', '--all']
         regex = re.compile(
-            r'^(\* (?:\(HEAD detached.*?\)|\w+)|  \S+)\s+(\w+|->)')
+            r'^(\* (?:\(HEAD detached.*?\)|\(no branch, rebasing.*?\)|\w+)|  \S+)\s+(\w+|->)')  # noqa
         for line in cmd2lines(cmd, cwd=self._path):
             match = regex.match(line)
             if match is None:
