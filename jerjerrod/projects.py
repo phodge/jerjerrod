@@ -61,7 +61,7 @@ class GitInspector(Inspector):
         return '__NO_BRANCH__'
 
     def statuslines(self):
-        changedregex = re.compile(r'^(?!  )[MADU ][UM ] ')
+        changedregex = re.compile(r'^(?!  )[MADU ]{2} ')
         if self._statuslines is None:
             changed = []
             untracked = []
