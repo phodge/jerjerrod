@@ -1,17 +1,28 @@
 from __future__ import (
-    absolute_import, division, unicode_literals, print_function)
-from subprocess import check_output, STDOUT, CalledProcessError, TimeoutExpired
-import re
+    absolute_import, division, print_function, unicode_literals)
+
 import os
+import re
+from contextlib import contextmanager
 from os.path import join
+from subprocess import STDOUT, CalledProcessError, TimeoutExpired, check_output
 
-from jerjerrod.caching import PROJECT_EXPIRY, OUTGOING_EXPIRY
-from jerjerrod.config import get_workspaces, get_singles
+import git
 
+from jerjerrod.caching import OUTGOING_EXPIRY, PROJECT_EXPIRY
+from jerjerrod.config import get_singles, get_workspaces
 
 HOME = os.environ['HOME']
 # allow up to 10 seconds to contact a remote HG server
 HG_REMOTE_TIMEOUT = 10
+
+
+@contextmanager
+def gc_(*things):
+    """Context manager that calls .__del__() on all arguments when it finishes"""
+    yield things
+    for thing in things:
+        thing.__del__()
 
 
 def cmd2lines(*args, **kwargs):
@@ -23,30 +34,10 @@ def cmd2lines(*args, **kwargs):
 
 
 class Inspector(object):
-    _proc = None
-    _callback = None
-
     outgoingexpensive = True
 
     def __init__(self, path):
         self._path = path
-
-    def checkproc(self):
-        # closes off the background process if it is still running
-        if self._proc:
-            retval = self._proc.poll()
-            if retval is not None:
-                try:
-                    assert retval == 0
-                    stdout = self._proc.stdout.read()
-                    alllines = (line.rstrip()
-                                for line in stdout.decode('utf-8').split('\n'))
-                    self._callback(line for line in alllines if len(line))
-                finally:
-                    self._proc = None
-                    self._callback = None
-
-        return self._proc is not None
 
 
 class GitInspector(Inspector):
@@ -54,11 +45,12 @@ class GitInspector(Inspector):
     outgoingexpensive = False
 
     def getbranch(self):
-        lines = list(cmd2lines(['git', 'branch'], cwd=self._path))
-        for line in lines:
-            if line.startswith('* ') and len(line) > 2:
-                return line[2:]
-        return '__NO_BRANCH__'
+        with gc_(git.Repo(self._path)) as (repo,):
+            try:
+                return repo.active_branch.name
+            except TypeError:
+                # might be a detached head
+                return None
 
     def statuslines(self):
         changedregex = re.compile(r'^(?!  )[MADU ]{2} ')
@@ -80,7 +72,8 @@ class GitInspector(Inspector):
         return self.statuslines()[0]
 
     def getuntracked(self):
-        return self.statuslines()[1]
+        with gc_(git.Repo(self._path)) as (repo,):
+            return repo.untracked_files
 
     def getoutgoing(self):
         known = set()
@@ -213,7 +206,6 @@ class Project(object):
 
 class Repo(Project):
     _info = None
-    _proc = None
     _newinfo = None
 
     def __init__(self, name, path, inspector):
