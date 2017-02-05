@@ -10,7 +10,7 @@ def _populateconfig(cache):
     if 'WORKSPACES' in cache:
         return
 
-    cache['WORKSPACES'] = []
+    cache['WORKSPACES'] = {}
     cache['SINGLES'] = []
 
     if not os.path.exists(RCFILE):
@@ -37,7 +37,8 @@ def _readcfgline(number, line, cache):
         raise Exception("Invalid CFG flag on line %d: %r" % (number, flag))
     if keyword == 'WORKSPACE':
         for match in glob.glob(path):
-            cache['WORKSPACES'].append((os.path.basename(match), match, flags))
+            name = os.path.basename(match)
+            cache['WORKSPACES'][name] = (match, flags)
         return
     if keyword == 'PROJECT':
         for match in glob.glob(path):
@@ -54,7 +55,8 @@ def _readcfgline(number, line, cache):
 
 def get_workspaces(cache):
     _populateconfig(cache)
-    return cache['WORKSPACES']
+    for name, (path, flags) in cache['WORKSPACES'].items():
+        yield name, path, flags
 
 
 def get_singles(cache):
