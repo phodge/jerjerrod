@@ -262,6 +262,9 @@ class Repo(Project):
             return 'JERJERROD:UNPUSHED'
         return 'JERJERROD:CLEAN'
 
+    def containspath(self, path):
+        return os.path.realpath(path).startswith(self._path)
+
 
 class Workspace(Project):
     def __init__(self, name, path, ignore):
@@ -308,6 +311,9 @@ class Workspace(Project):
 
     def getgarbage(self):
         return self._garbage
+
+    def containspath(self, path):
+        return os.path.realpath(path).startswith(self._path)
 
 
 def get_all_projects(diskcache, memcache):
