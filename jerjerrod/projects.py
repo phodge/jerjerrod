@@ -283,6 +283,20 @@ class Workspace(Project):
             repo.setcache(cache)
 
     def _scan(self):
+        # is there a virtualenv inside this workspace?
+        has_venv = os.path.exists(os.path.join(self._path, 'bin', 'activate'))
+        ignore = self._ignore
+        if has_venv:
+            ignore = list(self._ignore)
+            ignore += [
+                'bin',
+                'include',
+                'share',
+                'lib',
+                'lib64',
+                'pip-selfcheck.json'
+            ]
+
         for name in os.listdir(self._path):
             subpath = join(self._path, name)
             inspector = None
@@ -295,7 +309,7 @@ class Workspace(Project):
                 self._repos.append(Repo(name, subpath, inspector))
             else:
                 # do we need to ignore this thing?
-                if name not in self._ignore:
+                if name not in ignore:
                     self._garbage.append(name)
 
     def getstatus(self, caninspect):
