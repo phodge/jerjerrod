@@ -1,5 +1,5 @@
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 import os
 import re
@@ -76,49 +76,45 @@ class GitInspector(Inspector):
             return repo.untracked_files
 
     def getoutgoing(self):
-        known = set()
-        found = set()
-        wip = set()
-        cmd = ['git', 'branch', '--verbose', '--all']
-        regex = re.compile(
-            r'^(\* (?:\((?:HEAD detached|detached from|no branch, rebasing).*?\)|\w+)|  \S+)\s+(\w+|->)')  # noqa
-        for line in cmd2lines(cmd, cwd=self._path):
-            match = regex.match(line)
-            if match is None:
-                raise Exception("Did not understand %r" % line)
-            #lead = match.group(1)[:2]
-            branch = match.group(1)[2:]
-            revhash = match.group(2)
-            if branch.startswith('(HEAD detached'):
-                found.add(revhash)
-                continue
-            if branch.startswith('remotes/') and branch.endswith('/HEAD'):
-                continue
-            assert revhash != '->'
-            known.add(revhash)
-            # if the branch starts with remotes/, we want to mark the rev
-            # as found
-            if branch.startswith('remotes/'):
-                if branch.endswith('.WIP'):
-                    wip.add(revhash)
-                elif '.WIP' not in branch:
-                    found.add(revhash)
+        outgoing = []
 
-        # manually check to see if there are revhashes not contained in any
-        # remote branches
-        for revhash in known - found:
-            cmd = ['git', 'branch', '--all', '--contains', revhash]
-            revfound = False
-            for match in cmd2lines(cmd, cwd=self._path):
-                assert match[:2] in ('  ', '* ')
-                branch = re.split(r'\s+', match[2:])[0]
-                if branch.startswith('remotes/origin/'):
-                    revfound = True
-                    break
-            if not revfound:
-                return '1+'
+        print(self._path)
+        with gc_(git.Repo(self._path)) as (repo,):
+            localonly = {}
+            for head in repo.branches:
+                # does the local branch have an upstream? Are there any outgoing changes?
+                upstream = head.tracking_branch()
 
-        return 0
+                if not (upstream and upstream.is_valid()):
+                    localonly[head.commit.binsha] = head
+                    continue
+
+                if head.commit == upstream.commit:
+                    continue
+                if not repo.is_ancestor(head.commit, upstream.commit):
+                    outgoing.append(head)
+
+            # NOTE: the repo object can check if one commit is ancestor of another using is_ancestor()
+            # put all the remote refs in a dict so we can look for local commits that aren't part of any of them
+            remote_refs = set()
+
+            for remote in repo.remotes:
+                # now go through remote refs and see if our locals have been merged into any of them yet?
+                for ref in remote.refs:
+                    # forget about the local head that pointed at this commit - we know it exists on the remote already
+                    localonly.pop(ref.commit.binsha, None)
+                    remote_refs.add(ref)
+
+            for head in localonly.values():
+                pushed = False
+                for ref in remote_refs:
+                    if repo.is_ancestor(head, ref):
+                        pushed = True
+                        break
+                if not pushed:
+                    outgoing.append(head)
+
+        return len(outgoing)
 
     def getstashcount(self):
         cmd = ['git', 'stash', 'list']
