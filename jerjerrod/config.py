@@ -1,5 +1,6 @@
-import os.path
 import glob
+import os.path
+import re
 from os.path import join
 
 HOME = os.environ['HOME']
@@ -28,9 +29,19 @@ def _populateconfig(cache):
 def _readcfgline(number, line, cache):
     if line.startswith('#'):
         return
-    keyword, path, *flags = line.split(' ')
+
+    keyword, remaining = line.split(' ', 1)
+
+    pathmatch = re.match(r'^"[^"]+"|\S+', remaining)
+    assert pathmatch is not None
+    path = pathmatch.group()
+    flags = [f for f in remaining[len(path):].split(' ') if f]
+    if path.startswith('"'):
+        path = path[1:-1]
+
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
+
     for flag in flags:
         if flag.startswith('IGNORE='):
             continue
