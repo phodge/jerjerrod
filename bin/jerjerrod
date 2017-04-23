@@ -95,7 +95,7 @@ def summary(name_or_path):
 
 
 @cli.command()
-@click.argument('PATH')
+@click.argument('PATH', nargs=-1, type=click.Path(exists=True))
 @click.option('--local',
               is_flag=True,
               help="Don't touch the expensive 'hg outgoing' cache")
@@ -111,11 +111,11 @@ def clearcache(path, local):
             if not local:
                 cache.clearcache(path + '...outgoing')
 
-    trypath = realpath(path)
-    while len(trypath) > 2:
-        _checkandclear(trypath)
-        # shorten the path and try again
-        trypath = dirname(trypath)
+    for trypath in map(realpath, path):
+        while len(trypath) > 2:
+            _checkandclear(trypath)
+            # shorten the path and try again
+            trypath = dirname(trypath)
 
 
 if __name__ == '__main__':
