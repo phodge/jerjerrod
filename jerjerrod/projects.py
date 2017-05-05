@@ -82,6 +82,10 @@ class GitInspector(Inspector):
         with gc_(git.Repo(self._path)) as (repo,):
             localonly = {}
             for head in repo.branches:
+                # ignore our git-wip backups
+                if '.WIP.BACKUP-' in head.name:
+                    continue
+
                 # does the local branch have an upstream? Are there any outgoing changes?
                 upstream = head.tracking_branch()
 
