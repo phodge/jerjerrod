@@ -53,7 +53,7 @@ class GitInspector(Inspector):
                 return None
 
     def statuslines(self):
-        changedregex = re.compile(r'^(?!  )[MADU ]{2} ')
+        changedregex = re.compile(r'^(?!  )[RMADU ]{2} ')
         if self._statuslines is None:
             changed = []
             untracked = []
