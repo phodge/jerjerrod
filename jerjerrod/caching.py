@@ -1,10 +1,10 @@
 import base64
-import simplejson
 import os
 import time
+from os.path import exists, join
 from subprocess import check_call
-from os.path import join
 
+import simplejson
 
 HOME = os.environ['HOME']
 CACHEDIR = join(HOME, '.config', 'jerjerrod', 'cache')
@@ -25,7 +25,7 @@ class DiskCache(object):
         sanepath = join(CACHEDIR, _getcachepath(path))
 
         # convert path to something sane that doesn't include slashes
-        if not os.path.exists(sanepath):
+        if not exists(sanepath):
             return
         if (os.stat(sanepath).st_mtime + expiry) < time.time():
             os.unlink(sanepath)
@@ -35,7 +35,7 @@ class DiskCache(object):
 
     def setcache(self, path, info):
         data = simplejson.dumps(info)
-        if not os.path.exists(CACHEDIR):
+        if not exists(CACHEDIR):
             check_call(['mkdir', '-p', CACHEDIR])
         sanepath = join(CACHEDIR, _getcachepath(path))
         with open(sanepath, 'w') as f:
@@ -43,5 +43,5 @@ class DiskCache(object):
 
     def clearcache(self, path):
         sanepath = join(CACHEDIR, _getcachepath(path))
-        if os.path.exists(sanepath):
+        if exists(sanepath):
             os.unlink(sanepath)
