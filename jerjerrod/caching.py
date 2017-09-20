@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import time
+from datetime import date, datetime
 from os.path import exists, join
 from subprocess import check_call
 
@@ -12,6 +13,8 @@ CACHEDIR = join(HOME, '.config', 'jerjerrod', 'cache')
 PROJECT_EXPIRY = 60 * 60
 # only check outgoing every 4 hours
 OUTGOING_EXPIRY = 60 * 60 * 4
+
+IGNORE_PATH = join(HOME, '.config', 'jerjerrod', 'ignore.json')
 
 
 def _getcachepath(path):
@@ -45,3 +48,22 @@ class DiskCache(object):
         sanepath = join(CACHEDIR, _getcachepath(path))
         if exists(sanepath):
             os.unlink(sanepath)
+
+    def getignorelist(self):
+        if not exists(IGNORE_PATH):
+            return set()
+
+        # is the file dated earlier than today?
+        today = date.today()
+        dt = datetime(today.year, today.month, today.day)
+        if os.stat(IGNORE_PATH).st_mtime < dt.timestamp():
+            os.unlink(IGNORE_PATH)
+            return set()
+
+        with open(IGNORE_PATH) as f:
+            return set(json.load(f))
+
+    def setignorelist(self, sequence):
+        things = [str(name) for name in sequence]
+        with open(IGNORE_PATH, 'w') as f:
+            json.dump(things, f)
