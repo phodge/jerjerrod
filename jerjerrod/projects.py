@@ -194,6 +194,14 @@ class Project(object):
     _cache = None
     _scanning = False
 
+    def __init__(self, name, path):
+        self._name = name
+        self._path = path
+
+    @property
+    def project_path(self):
+        return self._path
+
     def setcache(self, cache):
         self._cache = cache
 
@@ -209,9 +217,7 @@ class Repo(Project):
     _newinfo = None
 
     def __init__(self, name, path, inspector):
-        super(Repo, self).__init__()
-        self._name = name
-        self._path = path
+        super(Repo, self).__init__(name, path)
         self._insp = inspector
 
     def _getinfo(self, caninspect):
@@ -268,10 +274,8 @@ class Repo(Project):
 
 class Workspace(Project):
     def __init__(self, name, path, ignore):
-        super(Workspace, self).__init__()
+        super(Workspace, self).__init__(name, path)
         # TODO: find repos
-        self._name = name
-        self._path = path
         self._repos = []
         self._garbage = []
         self._ignore = ignore
