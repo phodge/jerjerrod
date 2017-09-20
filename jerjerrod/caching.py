@@ -1,10 +1,10 @@
 import base64
+import json
 import os
 import time
 from os.path import exists, join
 from subprocess import check_call
 
-import simplejson
 
 HOME = os.environ['HOME']
 CACHEDIR = join(HOME, '.config', 'jerjerrod', 'cache')
@@ -31,10 +31,10 @@ class DiskCache(object):
             os.unlink(sanepath)
             return
         with open(sanepath, 'r') as f:
-            return simplejson.loads(f.read())
+            return json.loads(f.read())
 
     def setcache(self, path, info):
-        data = simplejson.dumps(info)
+        data = json.dumps(info)
         if not exists(CACHEDIR):
             check_call(['mkdir', '-p', CACHEDIR])
         sanepath = join(CACHEDIR, _getcachepath(path))
