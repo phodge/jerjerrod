@@ -97,6 +97,26 @@ def summary(name_or_path):
 
 
 @cli.command()
+@click.argument('NAMES_AND_PATHS', nargs=-1)
+def nottoday(names_and_paths):
+    """Tell jerjerrod not to report about certain projects until tomorrow."""
+    # use the disk cache
+    cache = DiskCache()
+
+    # grab the current ignore list
+    ignore = cache.getignorelist()
+
+    for proj in get_all_projects(cache, {}):
+        for name_or_path in names_and_paths:
+            if (proj.getname() == name_or_path or
+                    proj.containspath(name_or_path)):
+                ignore.add(proj.project_path)
+
+    # save the new ignore list
+    cache.setignorelist(ignore)
+
+
+@cli.command()
 @click.argument('PATH', nargs=-1, type=click.Path(exists=True))
 @click.option('--local',
               is_flag=True,
