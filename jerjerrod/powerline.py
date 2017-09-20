@@ -83,7 +83,12 @@ def wsnames(pl, category):
     assert category in ('JERJERROD:CHANGED', 'JERJERROD:UNTRACKED',
                         'JERJERROD:UNPUSHED', 'JERJERROD:UNKNOWN')
     names = []
-    for proj in get_all_projects(DiskCache(), _CFGCACHE):
+    cache = DiskCache()
+    ignored = cache.getignorelist()
+
+    for proj in get_all_projects(cache, _CFGCACHE):
+        if proj.project_path in ignored:
+            continue
         status = proj.getstatus(False)
         if status == 'JERJERROD:UNKNOWN' and _SUB is None:
             _refresh(True)
