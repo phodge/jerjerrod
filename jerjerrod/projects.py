@@ -129,7 +129,7 @@ class HgInspector(Inspector):
     _statuslines = None
 
     def getbranch(self):
-        output = check_output(['hg', 'branch'], cwd=self._path).strip()
+        output = list(cmd2lines(['hg', 'branch'], cwd=self._path))[0]
         assert len(output)
         return output
 
