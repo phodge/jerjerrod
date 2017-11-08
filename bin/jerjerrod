@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import sys
+from functools import partial
 from os.path import dirname, exists, join, realpath
 
 import click
@@ -14,6 +15,17 @@ from jerjerrod.projects import get_all_projects
 @click.group()
 def cli():
     pass
+
+
+def style(number, **style):
+    if number == 0:
+        return str(number)
+    return click.style(str(number), **style)
+
+
+style_changed = partial(style, fg='red', bold=True)
+style_unpushed = partial(style, fg='yellow', bold=False)
+style_untracked = partial(style, fg='red', bold=False)
 
 
 # TODO: which commands need to be fast?
@@ -59,13 +71,17 @@ def summary(name_or_path):
     def _summarise(repo, indent):
         info = repo._getinfo(True)
         sys.stdout.write(' ' * indent)
-        sys.stdout.write('  Outgoing: %s\n' % info['outgoing'])
+        sys.stdout.write('  Outgoing: {}\n'.format(
+            style_unpushed(info['outgoing'])))
         sys.stdout.write(' ' * indent)
-        sys.stdout.write('  Changed/Untracked: %d/%d\n'
-                         % (len(info['changed']), len(info['untracked'])))
+        sys.stdout.write('  Changed/Untracked: {}/{}\n'.format(
+            style_changed(len(info['changed'])),
+            style_untracked(len(info['untracked']))
+        ))
         if info['stashes']:
             sys.stdout.write(' ' * indent)
-            sys.stdout.write('  Stashes: %d\n' % info['stashes'])
+            sys.stdout.write('  Stashes: {}\n'.format(
+                style_untracked(info['stashes'])))
 
     project = None
     for proj in get_all_projects(cache, {}):
