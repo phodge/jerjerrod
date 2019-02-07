@@ -12,9 +12,17 @@ from jerjerrod.caching import DiskCache
 from jerjerrod.projects import get_all_projects
 
 
-@click.group()
-def cli():
-    pass
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx):
+    if ctx.invoked_subcommand is None:
+        click.secho(
+            'No subcommand specified. Clearing cache and presenting summary',
+            fg='yellow',
+        )
+        do_clearcache('.', False)
+        present_summary('.')
+        sys.exit(2)
 
 
 def style(number, **style):
@@ -65,6 +73,10 @@ def namesbystatus(status):
 @cli.command()
 @click.argument('NAME_OR_PATH')
 def summary(name_or_path):
+    present_summary(name_or_path)
+
+
+def present_summary(name_or_path):
     # use the disk cache
     cache = DiskCache()
 
@@ -139,6 +151,10 @@ def nottoday(names_and_paths):
               help="Don't touch the expensive 'hg outgoing' cache")
 def clearcache(path, local):
     """clear all caches associated with PATH"""
+    do_clearcache(path, local)
+
+
+def do_clearcache(path, local):
     cache = DiskCache()
 
     def _checkandclear(path):
