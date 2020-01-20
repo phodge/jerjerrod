@@ -57,16 +57,25 @@ style_untracked = partial(style, fg='red', bold=False)
 
 
 @cli.command()
-@click.argument('STATUS')
+@click.argument('STATUS', nargs=-1)
 def namesbystatus(status):
     """
     Names returned will be one of the following:
     - names of workspaces that match the given STATUS
     - names of other repos that match the given STATUS
+
+    Status can be one of:
+      JERJERROD:UNKNOWN
+      JERJERROD:CHANGED
+      JERJERROD:UNTRACKED
+      JERJERROD:UNPUSHED
+      JERJERROD:CLEAN
     """
+    assert len(status)
+    assert isinstance(status, tuple)
     # use the disk cache
     for proj in get_all_projects(DiskCache(), {}):
-        if proj.getstatus(True) == status:
+        if proj.getstatus(True) in status:
             print(proj.getname())
 
 
