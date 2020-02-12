@@ -78,7 +78,6 @@ class GitInspector(Inspector):
     def getoutgoing(self):
         outgoing = []
 
-        print(self._path)
         with gc_(git.Repo(self._path)) as (repo,):
             localonly = {}
             for head in repo.branches:
