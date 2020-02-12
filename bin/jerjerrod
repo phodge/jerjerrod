@@ -3,12 +3,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import sys
-from functools import partial
 from os.path import dirname, exists, join, realpath
 
 import click
 
 from jerjerrod.caching import DiskCache
+from jerjerrod.cli import RepoSummary, print_workspace_title, style
 from jerjerrod.projects import get_all_projects
 
 
@@ -23,17 +23,6 @@ def cli(ctx):
         do_clearcache('.', False)
         present_summary('.')
         sys.exit(2)
-
-
-def style(number, **style):
-    if number == 0:
-        return str(number)
-    return click.style(str(number), **style)
-
-
-style_changed = partial(style, fg='red', bold=True)
-style_unpushed = partial(style, fg='yellow', bold=False)
-style_untracked = partial(style, fg='red', bold=False)
 
 
 # TODO: which commands need to be fast?
@@ -89,21 +78,6 @@ def present_summary(name_or_path):
     # use the disk cache
     cache = DiskCache()
 
-    def _summarise(repo, indent):
-        info = repo._getinfo(True)
-        sys.stdout.write(' ' * indent)
-        sys.stdout.write('  Outgoing: {}\n'.format(
-            style_unpushed(info['outgoing'])))
-        sys.stdout.write(' ' * indent)
-        sys.stdout.write('  Changed/Untracked: {}/{}\n'.format(
-            style_changed(len(info['changed'])),
-            style_untracked(len(info['untracked']))
-        ))
-        if info['stashes']:
-            sys.stdout.write(' ' * indent)
-            sys.stdout.write('  Stashes: {}\n'.format(
-                style_untracked(info['stashes'])))
-
     project = None
     for proj in get_all_projects(cache, {}):
         if proj.getname() == name_or_path:
@@ -116,21 +90,23 @@ def present_summary(name_or_path):
     if not project:
         raise Exception("No project {}".format(name_or_path))
 
-    sys.stdout.write("%s %s\n" % (project.getname(), project._path))
     if hasattr(project, '_repos'):
+        print_workspace_title(project)
         # TODO: summarise workspace
-        indent = 8
+        indent = 2
         for repo in project._repos:
-            sys.stdout.write(' ' * indent)
-            sys.stdout.write("%s %s\n" % (repo._name, repo._path))
-            _summarise(repo, indent)
+            rs = RepoSummary(repo, indent)
+            rs.printnow()
         garbage = project.getgarbage()
-        if len(garbage):
-            sys.stdout.write(' ' * indent)
-            sys.stdout.write("GARBAGE: %s\n" % (garbage, ))
+        if len(garbage) == 1:
+            click.echo(style("s_untracked", "%sGARBAGE: %s" % (' ' * indent, garbage[0])))
+        elif len(garbage):
+            click.echo(style("s_untracked", "%sGARBAGE:" % (' ' * indent, )))
+            for g in garbage:
+                click.echo(style("s_untracked", "%s  %s" % (' ' * indent, g)))
     else:
-        sys.stdout.write(project.getname())
-        _summarise(project, 0)
+        rs = RepoSummary(project, 0)
+        rs.printnow()
 
 
 @cli.command()
