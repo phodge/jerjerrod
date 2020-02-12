@@ -201,6 +201,10 @@ class Project(object):
     def project_path(self):
         return self._path
 
+    @property
+    def isignored(self):
+        return self._path in self._cache.getignorelist()
+
     def setcache(self, cache):
         self._cache = cache
 
@@ -214,6 +218,8 @@ class Project(object):
 class Repo(Project):
     _info = None
     _newinfo = None
+
+    isworkspace = False
 
     def __init__(self, name, path, inspector):
         super(Repo, self).__init__(name, path)
@@ -272,6 +278,8 @@ class Repo(Project):
 
 
 class Workspace(Project):
+    isworkspace = True
+
     def __init__(self, name, path, ignore):
         super(Workspace, self).__init__(name, path)
         # TODO: find repos
