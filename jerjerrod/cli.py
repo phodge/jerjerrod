@@ -93,7 +93,7 @@ class RepoSummary:
             stats.append(style("s_changed", 'Changed: ' + changes))
 
         if self._outgoing_info:
-            stats.append(style("s_unpushed", 'Outgoing: ' + self._outgoing_info))
+            stats.append(style("s_unpushed", 'Outgoing: %s' % (self._outgoing_info, )))
 
         untracked = _getfilesstr(self._files_untracked)
         if untracked:
