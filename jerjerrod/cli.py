@@ -100,7 +100,7 @@ class RepoSummary:
             stats.append(style("s_untracked", 'Untracked: ' + untracked))
 
         if self._num_stashes:
-            stats.append(style("s_untracked", 'Stashes: %d' + self._num_stashes))
+            stats.append(style("s_untracked", 'Stashes: %d' % self._num_stashes))
 
         if len(stats):
             pipe = click.style(' | ', fg="black", dim=True)
