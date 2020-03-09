@@ -34,7 +34,12 @@ class DiskCache(object):
             os.unlink(sanepath)
             return
         with open(sanepath, 'r') as f:
-            return json.loads(f.read())
+            data = f.read()
+
+            # don't die horribly if the file is empty - empty files might
+            # happen when cache is written while the hdd is full
+            if len(data):
+                return json.loads(data)
 
     def setcache(self, path, info):
         data = json.dumps(info)
