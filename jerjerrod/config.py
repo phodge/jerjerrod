@@ -45,6 +45,8 @@ def _readcfgline(number, line, cache):
     for flag in flags:
         if flag.startswith('IGNORE='):
             continue
+        if flag == 'SPOTLIGHT':
+            continue
         raise Exception("Invalid CFG flag on line %d: %r" % (number, flag))
     if keyword == 'WORKSPACE':
         for match in glob.glob(path):

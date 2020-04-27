@@ -220,6 +220,7 @@ class Repo(Project):
     _newinfo = None
 
     isworkspace = False
+    spotlight = False
 
     def __init__(self, name, path, inspector):
         super(Repo, self).__init__(name, path)
@@ -347,12 +348,19 @@ def get_all_projects(diskcache, memcache):
         for flag in flags:
             if flag.startswith('IGNORE='):
                 ignore.append(flag[7:])
+            else:
+                raise Exception('Invalid flag %r' % (flag, ))
 
         project = Workspace(name, path, ignore=ignore)
         project.setcache(diskcache)
         yield project
     for name, path, flags in get_singles(memcache):
-        assert not len(flags)
+        spotlight = False
+        for flag in flags:
+            if flag == 'SPOTLIGHT':
+                spotlight = True
+            else:
+                raise Exception('Invalid flag %r' % (flag, ))
         # what type of inspector?
         if os.path.isdir(join(path, '.git')):
             inspector = GitInspector(path)
@@ -362,4 +370,6 @@ def get_all_projects(diskcache, memcache):
             raise Exception("Bad project path %s" % path)  # noqa
         project = Repo(name, path, inspector)
         project.setcache(diskcache)
+        if spotlight:
+            project.spotlight = True
         yield project
