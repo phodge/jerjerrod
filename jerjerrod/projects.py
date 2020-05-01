@@ -277,6 +277,10 @@ class Repo(Project):
     def containspath(self, path):
         return os.path.realpath(path).startswith(self._path)
 
+    def getbranch(self, caninspect):
+        info = self._getinfo(caninspect)
+        return info['branch'] if info else None
+
 
 class Workspace(Project):
     isworkspace = True
