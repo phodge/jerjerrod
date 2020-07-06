@@ -306,6 +306,7 @@ class Workspace(Project):
             ignore = list(self._ignore)
             ignore += [
                 'bin',
+                'man',
                 'include',
                 'share',
                 'lib',
