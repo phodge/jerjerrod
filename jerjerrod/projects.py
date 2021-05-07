@@ -340,6 +340,10 @@ class Workspace(Project):
             return 'JERJERROD:GARBAGE'
         return 'JERJERROD:CLEAN'
 
+    def get_branches(self, caninspect):
+        for repo in self._repos:
+            yield repo.getbranch(caninspect)
+
     def getgarbage(self):
         return self._garbage
 
