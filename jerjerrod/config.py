@@ -68,8 +68,17 @@ def _readcfgline(number, line, cache):
 
 def get_workspaces(cache):
     _populateconfig(cache)
-    for name, (path, flags) in cache['WORKSPACES'].items():
-        yield name, path, flags
+
+    # this list will be short enough that we can just always pull it all into
+    # memory and sort it
+    result = [
+        (name, path, flags)
+        for name, (path, flags) in cache['WORKSPACES'].items()
+    ]
+
+    result.sort()
+
+    return result
 
 
 def get_singles(cache):
