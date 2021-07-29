@@ -17,7 +17,7 @@ setup(
     keywords='tools utilities',
     packages=['jerjerrod'] + ['jerjerrod.{}'.format(p)
                               for p in find_packages('jerjerrod')],
-    install_requires=['click', 'simplejson', 'GitPython'],
+    install_requires=['click', 'simplejson', 'GitPython', 'diskcache', 'xdg'],
     scripts=['bin/jerjerrod'],
     # automatic version number using setuptools_scm
     setup_requires=['setuptools_scm'],
