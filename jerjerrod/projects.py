@@ -8,13 +8,18 @@ from os.path import join
 from subprocess import STDOUT, CalledProcessError, TimeoutExpired, check_output
 
 import git
+import diskcache
 
 from jerjerrod.caching import OUTGOING_EXPIRY, PROJECT_EXPIRY
-from jerjerrod.config import get_singles, get_workspaces
+from jerjerrod.config import get_singles, get_workspaces, get_improved_cache
+
 
 HOME = os.environ['HOME']
 # allow up to 10 seconds to contact a remote HG server
 HG_REMOTE_TIMEOUT = 10
+
+# 30 days
+IS_ANCESTOR_CACHE_TIMEOUT = 30 * 24 * 60 * 60
 
 
 @contextmanager
@@ -75,8 +80,33 @@ class GitInspector(Inspector):
         with gc_(git.Repo(self._path)) as (repo,):
             return repo.untracked_files
 
+    def _is_ancestor(
+        self,
+        repo: git.Repo,
+        ancestor: git.Commit,
+        possible_child: git.Commit,
+        new_cache: diskcache.Cache,
+    ) -> bool:
+        cache_key = (
+            'git_is_ancestor',
+            str(self._path),
+            ancestor.hexsha,
+            possible_child.hexsha,
+        )
+
+        cached = new_cache.get(cache_key)
+
+        if cached is not None:
+            return cached
+
+        value = repo.is_ancestor(ancestor, possible_child)
+        new_cache.set(cache_key, value, expire=IS_ANCESTOR_CACHE_TIMEOUT)
+        return value
+
     def getoutgoing(self):
         outgoing = []
+
+        new_cache = get_improved_cache()
 
         with gc_(git.Repo(self._path)) as (repo,):
             localonly = {}
@@ -94,24 +124,45 @@ class GitInspector(Inspector):
 
                 if head.commit == upstream.commit:
                     continue
-                if not repo.is_ancestor(head.commit, upstream.commit):
+
+                if not self._is_ancestor(repo, head.commit, upstream.commit, new_cache):
                     outgoing.append(head)
 
             # NOTE: the repo object can check if one commit is ancestor of another using is_ancestor()
             # put all the remote refs in a dict so we can look for local commits that aren't part of any of them
-            remote_refs = set()
+            remote_refs: Dict[str, git.RemoteReference] = {}
 
             for remote in repo.remotes:
                 # now go through remote refs and see if our locals have been merged into any of them yet?
                 for ref in remote.refs:
                     # forget about the local head that pointed at this commit - we know it exists on the remote already
                     localonly.pop(ref.commit.binsha, None)
-                    remote_refs.add(ref)
+                    remote_refs[ref.name] = ref
 
             for head in localonly.values():
                 pushed = False
-                for ref in remote_refs:
-                    if repo.is_ancestor(head, ref):
+
+                # there's a few remote refs we should check first
+                priority_refnames = [
+                    refname
+                    for refname in [
+                        'origin/master',
+                        'origin/main',
+                        'origin/{}'.format(head.name),
+                    ]
+                    if refname in remote_refs
+                ]
+
+                # make a list of all other refs
+                other_refnames = [
+                    refname
+                    for refname, ref in remote_refs.items()
+                    if refname not in priority_refnames
+                ]
+
+                for refname in priority_refnames + other_refnames:
+                    ref = remote_refs[refname]
+                    if self._is_ancestor(repo, head.commit, ref.commit, new_cache):
                         pushed = True
                         break
                 if not pushed:
