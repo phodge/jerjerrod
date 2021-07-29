@@ -3,7 +3,8 @@ import os.path
 import re
 from os.path import join
 
-from xdg import xdg_config_home
+import diskcache
+from xdg import xdg_config_home, xdg_cache_home
 
 RCFILE = str(xdg_config_home() / 'jerjerrod' / 'jerjerrod.conf')
 
@@ -85,3 +86,9 @@ def get_workspaces(cache):
 def get_singles(cache):
     _populateconfig(cache)
     return cache['SINGLES']
+
+
+def get_improved_cache() -> diskcache.Cache:
+    cache_path = xdg_cache_home() / 'jerjerrod'
+    cache = diskcache.Cache(cache_path)
+    return cache
