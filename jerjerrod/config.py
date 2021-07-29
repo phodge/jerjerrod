@@ -3,8 +3,9 @@ import os.path
 import re
 from os.path import join
 
-HOME = os.environ['HOME']
-RCFILE = join(HOME, '.config', 'jerjerrod', 'jerjerrod.conf')
+from xdg import xdg_config_home
+
+RCFILE = str(xdg_config_home() / 'jerjerrod' / 'jerjerrod.conf')
 
 
 def _populateconfig(cache):
