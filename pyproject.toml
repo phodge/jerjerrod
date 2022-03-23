@@ -20,6 +20,16 @@ xdg = "^5.1.1"
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
 
+[tool.poetry-dynamic-versioning]
+# dynamic versioning provided by https://github.com/mtkennerly/poetry-dynamic-versioning
+enable = true
+vcs = "git"
+pattern = "^(?P<base>\\d+(?:\\.\\d+)+)$"
+
+[tool.poetry-dynamic-versioning.substitution]
+files = ["jerjerrod/__init__.py"]
+patterns = ["^(__version__\\s*=\\s*')[^']*(')$"]
+
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
 build-backend = "poetry.core.masonry.api"
