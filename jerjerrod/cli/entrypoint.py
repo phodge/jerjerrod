@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
@@ -8,7 +7,7 @@ from os.path import dirname, exists, join, realpath
 import click
 
 from jerjerrod.caching import DiskCache
-from jerjerrod.cli import RepoSummary, print_workspace_title, style
+from jerjerrod.cli.utils import RepoSummary, print_workspace_title, style
 from jerjerrod.projects import get_all_projects
 
 

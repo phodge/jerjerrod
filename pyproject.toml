@@ -6,6 +6,9 @@ authors = ["Peter Hodge"]
 license = "MIT"
 homepage = "https://github.com/phodge/jerjerrod"
 
+[tool.poetry.scripts]
+jerjerrod = "jerjerrod.cli.entrypoint:cli"
+
 [tool.poetry.dependencies]
 python = "^3.8"
 click = "^8.0.4"
