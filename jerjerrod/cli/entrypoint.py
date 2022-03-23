@@ -6,6 +6,7 @@ from os.path import dirname, exists, join, realpath
 
 import click
 
+from jerjerrod import __version__
 from jerjerrod.caching import DiskCache
 from jerjerrod.cli.utils import RepoSummary, print_workspace_title, style
 from jerjerrod.projects import get_all_projects
@@ -13,6 +14,7 @@ from jerjerrod.projects import get_all_projects
 
 @click.group(invoke_without_command=True)
 @click.pass_context
+@click.version_option(__version__, prog_name='jerjerrod')
 def cli(ctx):
     if ctx.invoked_subcommand is None:
         click.secho(
