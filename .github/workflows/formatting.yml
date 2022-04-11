@@ -1,8 +1,8 @@
 on:
   # always run on pull requests that modify .py files
-  pull_request: ["**/*.py"]
+  pull_request: {paths: ["**/*.py"]}
   # always run on pushes to master branch
-  push: ["master"]
+  push: {branches: ["master"]}
 
 
 jobs:
