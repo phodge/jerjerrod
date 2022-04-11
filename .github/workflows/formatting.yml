@@ -1,3 +1,5 @@
+name: "Automated Code Formatting"
+
 on:
   # always run on pull requests that modify .py files
   pull_request: {paths: ["**/*.py"]}
