@@ -25,9 +25,6 @@ jobs:
       # checkout your code
       - uses: actions/checkout@v2
 
-      - name: Install poetry
-        run: sudo pip3 install poetry
-
       - name: Install all dependencies
         run: poetry install
 
