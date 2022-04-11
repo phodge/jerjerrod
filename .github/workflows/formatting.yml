@@ -25,8 +25,11 @@ jobs:
       # checkout your code
       - uses: actions/checkout@v2
 
+      - name: Install poetry
+        run: pip3 install --user poetry
+
       - name: Install all dependencies
-        run: pip3 install --user .
+        run: poetry install
 
       # now blacken the files
       - name: Blacken files changed in this PR
