@@ -1,0 +1,41 @@
+on:
+  # always run on pull requests that modify .py files
+  pull_request: ["**/*.py"]
+  # always run on pushes to master branch
+  push: ["master"]
+
+
+jobs:
+  blacken:
+    name: "Blacken .py files"
+
+    # Skip this job when already in a "...-blacken" branch. MagicPR already
+    # has mechanisms to prevent recursive creation of pull requests, but
+    # adding the job rule here saves wasting CI resources.
+    if: "!endsWith(github.head_ref, '-blacken')"
+
+    runs-on: ubuntu-latest
+    container: {image: magicpr/magicpr-demo/ubuntu/python3.8:latest}
+
+    permissions: {contents: write, pull-requests: write}
+
+    steps:
+      # checkout your code
+      - uses: actions/checkout@v2
+
+      - name: Install all dependencies
+        run: poetry install
+
+      # now blacken the files
+      - name: Blacken files changed in this PR
+        run: black $(find jerjerrod -name '*.py')
+
+      - name: Submit a Pull Request with formatting changes
+        run: |
+            magicpr suggest-changes \
+                --auth-token="${{ github.token }}" \
+                --commit-author="${{ github.event.commits[-1].author.name }}" \
+                --commit-email="${{ github.event.commits[-1].author.email }}" \
+                --branch-suffix=-blacken \
+                --commit-message='Blacken all .py files' \
+                --guidance='Please merge these python style changes'
