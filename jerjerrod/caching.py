@@ -7,20 +7,20 @@ from os.path import exists, join
 from subprocess import check_call
 
 
-HOME = os.environ['HOME']
-CACHEDIR = join(HOME, '.config', 'jerjerrod', 'cache')
+HOME = os.environ["HOME"]
+CACHEDIR = join(HOME, ".config", "jerjerrod", "cache")
 # re-check projects on the hour
 PROJECT_EXPIRY = 60 * 60
 # only check outgoing every 4 hours
 OUTGOING_EXPIRY = 60 * 60 * 4
 
-IGNORE_PATH = join(HOME, '.config', 'jerjerrod', 'ignore.json')
+IGNORE_PATH = join(HOME, ".config", "jerjerrod", "ignore.json")
 
 
 def _getcachepath(path):
-    if ':' in path:
+    if ":" in path:
         return base64.b64encode(path)
-    return path.replace('/', ':')
+    return path.replace("/", ":")
 
 
 class DiskCache(object):
@@ -33,7 +33,7 @@ class DiskCache(object):
         if (os.stat(sanepath).st_mtime + expiry) < time.time():
             os.unlink(sanepath)
             return
-        with open(sanepath, 'r') as f:
+        with open(sanepath, "r") as f:
             data = f.read()
 
             # don't die horribly if the file is empty - empty files might
@@ -44,9 +44,9 @@ class DiskCache(object):
     def setcache(self, path, info):
         data = json.dumps(info)
         if not exists(CACHEDIR):
-            check_call(['mkdir', '-p', CACHEDIR])
+            check_call(["mkdir", "-p", CACHEDIR])
         sanepath = join(CACHEDIR, _getcachepath(path))
-        with open(sanepath, 'w') as f:
+        with open(sanepath, "w") as f:
             f.write(data)
 
     def clearcache(self, path):
@@ -70,5 +70,5 @@ class DiskCache(object):
 
     def setignorelist(self, sequence):
         things = [str(name) for name in sequence]
-        with open(IGNORE_PATH, 'w') as f:
+        with open(IGNORE_PATH, "w") as f:
             json.dump(things, f)
