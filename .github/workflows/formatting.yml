@@ -17,6 +17,10 @@ jobs:
     if: "!endsWith(github.head_ref, '-blacken')"
 
     runs-on: ubuntu-latest
+    # TODO: eventually we want to use image
+    # "magicpr/magicpr-demo/ubuntu/python3.8:latest"
+    # or just
+    # "magicpr/magicpr-demo/python3.8:latest"
     container: {image: "vertigo1/magicpr-demo:latest"}
 
     permissions: {contents: write, pull-requests: write}
@@ -30,14 +34,13 @@ jobs:
 
       # now blacken the files
       - name: Blacken files changed in this PR
+        # TODO: is there a way to blacken just the .py files that were modified?
         run: black $(find jerjerrod -name '*.py')
 
       - name: Submit a Pull Request with formatting changes
         run: |
             magicpr suggest-changes \
                 --auth-token="${{ github.token }}" \
-                --commit-author="${{ github.event.commits[-1].author.name }}" \
-                --commit-email="${{ github.event.commits[-1].author.email }}" \
                 --branch-suffix=-blacken \
                 --commit-message='Blacken all .py files' \
                 --guidance='Please merge these python style changes'
