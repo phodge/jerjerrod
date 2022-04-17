@@ -29,10 +29,6 @@ jobs:
       # checkout your code
       - uses: actions/checkout@v2
 
-      # TODO: remove this bit once our image doesn't require it
-      - name: stop poetry using virtualenvs
-        run: poetry config virtualenvs.create false
-
       - name: Install all dependencies
         run: poetry install
 
