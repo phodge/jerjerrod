@@ -11,7 +11,7 @@ from jerjerrod.caching import OUTGOING_EXPIRY, PROJECT_EXPIRY
 from jerjerrod.config import get_singles, get_workspaces, get_improved_cache
 
 
-HOME = os.environ['HOME']
+HOME = os.environ["HOME"]
 # allow up to 10 seconds to contact a remote HG server
 HG_REMOTE_TIMEOUT = 10
 
@@ -29,7 +29,7 @@ def gc_(*things):
 
 def cmd2lines(*args, **kwargs):
     output = check_output(*args, **kwargs)
-    for line in output.decode('utf-8').split('\n'):
+    for line in output.decode("utf-8").split("\n"):
         line = line.rstrip()
         if len(line):
             yield line
@@ -55,15 +55,15 @@ class GitInspector(Inspector):
                 return None
 
     def statuslines(self):
-        changedregex = re.compile(r'^(?!  )[RMADUm ]{2} ')
+        changedregex = re.compile(r"^(?!  )[RMADUm ]{2} ")
         if self._statuslines is None:
             changed = []
             untracked = []
-            lines = cmd2lines(['git', 'status', '--short'], cwd=self._path)
+            lines = cmd2lines(["git", "status", "--short"], cwd=self._path)
             for line in lines:
                 if changedregex.match(line[:3]):
                     changed.append(line[3:])
-                elif line[:3] in (' ? ', '?? '):
+                elif line[:3] in (" ? ", "?? "):
                     untracked.append(line[3:])
                 else:
                     raise Exception("Unexpected: %r" % line)
@@ -85,7 +85,7 @@ class GitInspector(Inspector):
         new_cache: diskcache.Cache,
     ) -> bool:
         cache_key = (
-            'git_is_ancestor',
+            "git_is_ancestor",
             str(self._path),
             ancestor.hexsha,
             possible_child.hexsha,
@@ -109,7 +109,7 @@ class GitInspector(Inspector):
             localonly = {}
             for head in repo.branches:
                 # ignore our git-wip backups
-                if '.WIP.BACKUP-' in head.name:
+                if ".WIP.BACKUP-" in head.name:
                     continue
 
                 # does the local branch have an upstream? Are there any outgoing changes?
@@ -143,9 +143,9 @@ class GitInspector(Inspector):
                 priority_refnames = [
                     refname
                     for refname in [
-                        'origin/master',
-                        'origin/main',
-                        'origin/{}'.format(head.name),
+                        "origin/master",
+                        "origin/main",
+                        "origin/{}".format(head.name),
                     ]
                     if refname in remote_refs
                 ]
@@ -168,7 +168,7 @@ class GitInspector(Inspector):
         return len(outgoing)
 
     def getstashcount(self):
-        cmd = ['git', 'stash', 'list']
+        cmd = ["git", "stash", "list"]
         return len(list(cmd2lines(cmd, cwd=self._path)))
 
 
@@ -176,20 +176,20 @@ class HgInspector(Inspector):
     _statuslines = None
 
     def getbranch(self):
-        output = list(cmd2lines(['hg', 'branch'], cwd=self._path))[0]
+        output = list(cmd2lines(["hg", "branch"], cwd=self._path))[0]
         assert len(output)
         return output
 
     def statuslines(self):
-        changedregex = re.compile(r'^[MADR!] ')
+        changedregex = re.compile(r"^[MADR!] ")
         if self._statuslines is None:
             changed = []
             untracked = []
-            lines = cmd2lines(['hg', 'status'], cwd=self._path)
+            lines = cmd2lines(["hg", "status"], cwd=self._path)
             for line in lines:
                 if changedregex.match(line):
                     changed.append(line[2:])
-                elif line[:2] == '? ':
+                elif line[:2] == "? ":
                     untracked.append(line[2:])
                 else:
                     raise Exception("Unexpected: %s" % line)
@@ -212,28 +212,26 @@ class HgInspector(Inspector):
         the remote server, but know there are 3 draft commits
         """
         try:
-            cmd = ['hg', 'outgoing']
-            check_output(cmd, stderr=STDOUT, cwd=self._path,
-                         timeout=HG_REMOTE_TIMEOUT)
+            cmd = ["hg", "outgoing"]
+            check_output(cmd, stderr=STDOUT, cwd=self._path, timeout=HG_REMOTE_TIMEOUT)
         except TimeoutExpired:
-            return '?'
+            return "?"
         except CalledProcessError as err:
             if err.output.endswith(
-                    b'abort: error: nodename nor servname provided'
-                    b', or not known\n'):
-                return '-'
-            if err.output.endswith(
-                    b'abort: no suitable response from remote hg!\n'):
-                return '-'
-            if err.output.endswith(b'no changes found\n'):
+                b"abort: error: nodename nor servname provided" b", or not known\n"
+            ):
+                return "-"
+            if err.output.endswith(b"abort: no suitable response from remote hg!\n"):
+                return "-"
+            if err.output.endswith(b"no changes found\n"):
                 return 0
             print(err.output)
             raise
 
-        return '1+'
+        return "1+"
 
     def getstashcount(self):
-        lines = cmd2lines(['hg', 'shelve', '--list'], cwd=self._path)
+        lines = cmd2lines(["hg", "shelve", "--list"], cwd=self._path)
         return len(list(lines))
 
 
@@ -289,22 +287,21 @@ class Repo(Project):
             return old
 
         info = {}
-        info['branch'] = self._insp.getbranch()
-        info['changed'] = list(self._insp.getchanged())
-        info['untracked'] = list(self._insp.getuntracked())
+        info["branch"] = self._insp.getbranch()
+        info["changed"] = list(self._insp.getchanged())
+        info["untracked"] = list(self._insp.getuntracked())
 
         # NOTE: do we need to use a separate cache for outgoing status?
-        outgoing = self._cache.getcache(self._path + '...outgoing',
-                                        OUTGOING_EXPIRY)
+        outgoing = self._cache.getcache(self._path + "...outgoing", OUTGOING_EXPIRY)
         if outgoing is None or not self._insp.outgoingexpensive:
             outgoing = self._insp.getoutgoing()
-            if outgoing == '?' and old is not None:
-                outgoing = old['outgoing']
+            if outgoing == "?" and old is not None:
+                outgoing = old["outgoing"]
             else:
-                self._cache.setcache(self._path + '...outgoing', outgoing)
+                self._cache.setcache(self._path + "...outgoing", outgoing)
 
-        info['outgoing'] = outgoing
-        info['stashes'] = self._insp.getstashcount()
+        info["outgoing"] = outgoing
+        info["stashes"] = self._insp.getstashcount()
         self._cache.setcache(self._path, info)
         self._info = info
         return info
@@ -312,22 +309,22 @@ class Repo(Project):
     def getstatus(self, caninspect):
         info = self._getinfo(caninspect)
         if info is None:
-            return 'JERJERROD:UNKNOWN'
+            return "JERJERROD:UNKNOWN"
 
-        if info['changed'] or info['stashes']:
-            return 'JERJERROD:CHANGED'
-        if info['untracked']:
-            return 'JERJERROD:UNTRACKED'
-        if info['outgoing']:
-            return 'JERJERROD:UNPUSHED'
-        return 'JERJERROD:CLEAN'
+        if info["changed"] or info["stashes"]:
+            return "JERJERROD:CHANGED"
+        if info["untracked"]:
+            return "JERJERROD:UNTRACKED"
+        if info["outgoing"]:
+            return "JERJERROD:UNPUSHED"
+        return "JERJERROD:CLEAN"
 
     def containspath(self, path):
         return os.path.realpath(path).startswith(self._path)
 
     def getbranch(self, caninspect):
         info = self._getinfo(caninspect)
-        return info['branch'] if info else None
+        return info["branch"] if info else None
 
 
 class Workspace(Project):
@@ -348,26 +345,26 @@ class Workspace(Project):
 
     def _scan(self):
         # is there a virtualenv inside this workspace?
-        has_venv = os.path.exists(os.path.join(self._path, 'bin', 'activate'))
+        has_venv = os.path.exists(os.path.join(self._path, "bin", "activate"))
         ignore = self._ignore
         if has_venv:
             ignore = list(self._ignore)
             ignore += [
-                'bin',
-                'man',
-                'include',
-                'share',
-                'lib',
-                'lib64',
-                'pip-selfcheck.json'
+                "bin",
+                "man",
+                "include",
+                "share",
+                "lib",
+                "lib64",
+                "pip-selfcheck.json",
             ]
 
         for name in os.listdir(self._path):
             subpath = join(self._path, name)
             inspector = None
-            if os.path.isdir(join(subpath, '.git')):
+            if os.path.isdir(join(subpath, ".git")):
                 inspector = GitInspector(subpath)
-            elif os.path.isdir(join(subpath, '.hg')):
+            elif os.path.isdir(join(subpath, ".hg")):
                 inspector = HgInspector(subpath)
             if inspector is not None:
                 # create a Repo object
@@ -380,13 +377,17 @@ class Workspace(Project):
     def getstatus(self, caninspect):
         # return the worst status
         all_ = set((repo.getstatus(caninspect) for repo in self._repos))
-        for status in ('JERJERROD:UNKNOWN', 'JERJERROD:CHANGED',
-                       'JERJERROD:UNTRACKED', 'JERJERROD:UNPUSHED'):
+        for status in (
+            "JERJERROD:UNKNOWN",
+            "JERJERROD:CHANGED",
+            "JERJERROD:UNTRACKED",
+            "JERJERROD:UNPUSHED",
+        ):
             if status in all_:
                 return status
         if len(self._garbage):
-            return 'JERJERROD:GARBAGE'
-        return 'JERJERROD:CLEAN'
+            return "JERJERROD:GARBAGE"
+        return "JERJERROD:CLEAN"
 
     def get_branches(self, caninspect):
         for repo in self._repos:
@@ -403,10 +404,10 @@ def get_all_projects(diskcache, memcache):
     for name, path, flags in get_workspaces(memcache):
         ignore = []
         for flag in flags:
-            if flag.startswith('IGNORE='):
+            if flag.startswith("IGNORE="):
                 ignore.append(flag[7:])
             else:
-                raise Exception('Invalid flag %r' % (flag, ))
+                raise Exception("Invalid flag %r" % (flag,))
 
         project = Workspace(name, path, ignore=ignore)
         project.setcache(diskcache)
@@ -414,14 +415,14 @@ def get_all_projects(diskcache, memcache):
     for name, path, flags in get_singles(memcache):
         spotlight = False
         for flag in flags:
-            if flag == 'SPOTLIGHT':
+            if flag == "SPOTLIGHT":
                 spotlight = True
             else:
-                raise Exception('Invalid flag %r' % (flag, ))
+                raise Exception("Invalid flag %r" % (flag,))
         # what type of inspector?
-        if os.path.isdir(join(path, '.git')):
+        if os.path.isdir(join(path, ".git")):
             inspector = GitInspector(path)
-        elif os.path.isdir(join(path, '.hg')):
+        elif os.path.isdir(join(path, ".hg")):
             inspector = HgInspector(path)
         else:
             raise Exception("Bad project path %s" % path)  # noqa
