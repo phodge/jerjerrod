@@ -1,5 +1,4 @@
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
 from os.path import dirname, exists, join, realpath
@@ -14,15 +13,15 @@ from jerjerrod.projects import get_all_projects
 
 @click.group(invoke_without_command=True)
 @click.pass_context
-@click.version_option(__version__, prog_name='jerjerrod')
+@click.version_option(__version__, prog_name="jerjerrod")
 def cli(ctx):
     if ctx.invoked_subcommand is None:
         click.secho(
-            'No subcommand specified. Clearing cache and presenting summary',
-            fg='yellow',
+            "No subcommand specified. Clearing cache and presenting summary",
+            fg="yellow",
         )
-        do_clearcache('.', False)
-        present_summary('.')
+        do_clearcache(".", False)
+        present_summary(".")
         sys.exit(2)
 
 
@@ -47,7 +46,7 @@ def cli(ctx):
 
 
 @cli.command()
-@click.argument('STATUS', nargs=-1)
+@click.argument("STATUS", nargs=-1)
 def namesbystatus(status):
     """
     Names returned will be one of the following:
@@ -70,7 +69,7 @@ def namesbystatus(status):
 
 
 @cli.command()
-@click.argument('NAME_OR_PATH')
+@click.argument("NAME_OR_PATH")
 def summary(name_or_path):
     present_summary(name_or_path)
 
@@ -91,7 +90,7 @@ def present_summary(name_or_path):
     if not project:
         raise Exception("No project {}".format(name_or_path))
 
-    if hasattr(project, '_repos'):
+    if hasattr(project, "_repos"):
         print_workspace_title(project)
         # TODO: summarise workspace
         indent = 2
@@ -100,18 +99,20 @@ def present_summary(name_or_path):
             rs.printnow()
         garbage = project.getgarbage()
         if len(garbage) == 1:
-            click.echo(style("s_untracked", "%sGARBAGE: %s" % (' ' * indent, garbage[0])))
+            click.echo(
+                style("s_untracked", "%sGARBAGE: %s" % (" " * indent, garbage[0]))
+            )
         elif len(garbage):
-            click.echo(style("s_untracked", "%sGARBAGE:" % (' ' * indent, )))
+            click.echo(style("s_untracked", "%sGARBAGE:" % (" " * indent,)))
             for g in garbage:
-                click.echo(style("s_untracked", "%s  %s" % (' ' * indent, g)))
+                click.echo(style("s_untracked", "%s  %s" % (" " * indent, g)))
     else:
         rs = RepoSummary(project, 0)
         rs.printnow()
 
 
 @cli.command()
-@click.argument('NAMES_AND_PATHS', nargs=-1)
+@click.argument("NAMES_AND_PATHS", nargs=-1)
 def nottoday(names_and_paths):
     """Tell jerjerrod not to report about certain projects until tomorrow."""
     # use the disk cache
@@ -122,8 +123,7 @@ def nottoday(names_and_paths):
 
     for proj in get_all_projects(cache, {}):
         for name_or_path in names_and_paths:
-            if (proj.getname() == name_or_path or
-                    proj.containspath(name_or_path)):
+            if proj.getname() == name_or_path or proj.containspath(name_or_path):
                 ignore.add(proj.project_path)
 
     # save the new ignore list
@@ -131,10 +131,10 @@ def nottoday(names_and_paths):
 
 
 @cli.command()
-@click.argument('PATH', nargs=-1, type=click.Path(exists=True))
-@click.option('--local',
-              is_flag=True,
-              help="Don't touch the expensive 'hg outgoing' cache")
+@click.argument("PATH", nargs=-1, type=click.Path(exists=True))
+@click.option(
+    "--local", is_flag=True, help="Don't touch the expensive 'hg outgoing' cache"
+)
 def clearcache(path, local):
     """clear all caches associated with PATH"""
     do_clearcache(path, local)
@@ -144,10 +144,10 @@ def do_clearcache(path, local):
     cache = DiskCache()
 
     def _checkandclear(path):
-        if exists(join(path, '.git')) or exists(join(path, '.hg')):
+        if exists(join(path, ".git")) or exists(join(path, ".hg")):
             cache.clearcache(path)
             if not local:
-                cache.clearcache(path + '...outgoing')
+                cache.clearcache(path + "...outgoing")
 
     for trypath in map(realpath, path):
         while len(trypath) > 2:
@@ -156,5 +156,5 @@ def do_clearcache(path, local):
             trypath = dirname(trypath)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()
