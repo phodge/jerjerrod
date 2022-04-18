@@ -21,7 +21,7 @@ jobs:
     # "magicpr/magicpr-demo/ubuntu/python3.8:latest"
     # or just
     # "magicpr/magicpr-demo/python3.8:latest"
-    container: {image: "vertigo1/magicpr-demo:latest"}
+    container: {image: "vertigo1/magicpr-demo:22.04"}
 
     permissions: {contents: write, pull-requests: write}
 
