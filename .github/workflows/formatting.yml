@@ -21,7 +21,7 @@ jobs:
     # "magicpr/magicpr-demo/ubuntu/python3.8:latest"
     # or just
     # "magicpr/magicpr-demo/python3.8:latest"
-    container: {image: "vertigo1/magicpr-demo:22.04"}
+    container: {image: "vertigo1/magicpr-demo:2022.0"}
 
     permissions: {contents: write, pull-requests: write}
 
@@ -35,7 +35,7 @@ jobs:
       # now blacken the files
       - name: Blacken files changed in this PR
         # TODO: is there a way to blacken just the .py files that were modified?
-        run: black $(find jerjerrod -name '*.py')
+        run: black .
 
       - name: Submit a Pull Request with formatting changes
         run: |
