@@ -21,7 +21,7 @@ def cli(ctx):
             fg="yellow",
         )
         do_clearcache(".", False)
-        present_summary(".")
+        present_summary('.')
         sys.exit(2)
 
 
