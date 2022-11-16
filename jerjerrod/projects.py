@@ -63,7 +63,7 @@ class GitInspector(Inspector):
             for line in lines:
                 if changedregex.match(line[:3]):
                     changed.append(line[3:])
-                elif line[:3] in (" ? ", "?? "):
+                elif line[:3] in (" ? ", "?? ", "A? "):
                     untracked.append(line[3:])
                 else:
                     raise Exception("Unexpected: %r" % line)
