@@ -225,7 +225,7 @@ class HgInspector(Inspector):
                 return "-"
             if err.output.endswith(b"no changes found\n"):
                 return 0
-            print(err.output)
+            print('ERROR: {}'.format(err.output))
             raise
 
         return "1+"
