@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
-from os.path import dirname, exists, join, realpath
+from os import getcwd
+from os.path import basename, dirname, exists, join, realpath
 
 import click
 
@@ -20,8 +21,8 @@ def cli(ctx):
             "No subcommand specified. Clearing cache and presenting summary",
             fg="yellow",
         )
-        do_clearcache(".", False)
-        present_summary(".")
+        do_clearcache(getcwd(), False)
+        present_summary(getcwd())
         sys.exit(2)
 
 
@@ -81,7 +82,7 @@ def present_summary(name_or_path):
     match1 = None
     match2 = None
     for proj in get_all_projects(cache, {}):
-        if proj.getname() == name_or_path:
+        if proj.getname() == basename(name_or_path):
             match1 = proj
             break
         if proj.containspath(name_or_path):
