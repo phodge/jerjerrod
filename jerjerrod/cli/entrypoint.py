@@ -78,14 +78,17 @@ def present_summary(name_or_path):
     # use the disk cache
     cache = DiskCache()
 
-    project = None
+    match1 = None
+    match2 = None
     for proj in get_all_projects(cache, {}):
         if proj.getname() == name_or_path:
-            project = proj
+            match1 = proj
             break
         if proj.containspath(name_or_path):
-            project = proj
-            break
+            if not match2:
+                match2 = proj
+
+    project = match1 or match2
 
     if not project:
         raise Exception("No project {}".format(name_or_path))
