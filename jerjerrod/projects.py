@@ -420,7 +420,7 @@ def get_all_projects(diskcache, memcache):
             else:
                 raise Exception("Invalid flag %r" % (flag,))
         # what type of inspector?
-        if os.path.isdir(join(path, ".git")):
+        if os.path.exists(join(path, ".git")):
             inspector = GitInspector(path)
         elif os.path.isdir(join(path, ".hg")):
             inspector = HgInspector(path)
